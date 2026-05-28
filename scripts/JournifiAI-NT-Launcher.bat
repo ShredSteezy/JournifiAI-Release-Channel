@@ -112,12 +112,15 @@ if exist "%JOURNIFI_EXE_MACHINE%" (
 echo.
 
 echo ================================================================
-echo Launcher complete. This window will close in a moment.
-echo Both apps run independently -- closing this window does not
-echo affect them.
+echo Launcher complete. Closing in 5 seconds.
+echo Both apps run independently -- this window can be safely
+echo X'd out or left to close on its own; neither app cares.
 echo ================================================================
 
-REM Brief delay so the user has a chance to glance at any warnings
-REM above, then exit cleanly. /nobreak prevents accidental Ctrl-C
-REM interruption from leaving the script in a weird state.
-timeout /t 3 /nobreak >nul
+REM 5-second hold so the user has time to read any warnings above
+REM before the window auto-closes. /nobreak ignores keystrokes so
+REM the script doesn't exit early on an accidental keypress. The
+REM user can still X out the window if they want -- Journifi is
+REM properly detached now (PowerShell Start-Process above), so
+REM closing this window has no effect on either launched app.
+timeout /t 5 /nobreak >nul
