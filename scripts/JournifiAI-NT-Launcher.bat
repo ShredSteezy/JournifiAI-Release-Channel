@@ -3,7 +3,7 @@ REM ================================================================
 REM   Journifi AI + NinjaTrader Launcher
 REM
 REM   Original NT launcher by AlphaWolfTrader (Chris).
-REM   Two-app launch suggested by Xdzatx — thanks for the nudge that
+REM   Two-app launch suggested by Xdzatx -- thanks for the nudge that
 REM   turned a single-app script into a one-click trading setup.
 REM
 REM   What this does:
@@ -11,11 +11,29 @@ REM     1. Launches NinjaTrader 8 with HIGH process priority and
 REM        Server GC enabled (faster bar processing, less GC pause)
 REM     2. Launches Journifi AI in parallel
 REM
+REM   You'll see a UAC prompt the first time you run this -- that's
+REM   normal. /HIGH priority on the NT process requires admin rights
+REM   (a Windows security setting; nothing this script is doing is
+REM   actually risky -- just launching two installed programs). Click
+REM   Yes and both apps will boot.
+REM
 REM   If either app fails to launch, you'll see a [WARNING] line
 REM   telling you where it expected to find the .exe. Edit the
 REM   paths in the CONFIG section below if your installs live
 REM   somewhere else.
 REM ================================================================
+
+REM ── Self-elevate to administrator if not already elevated ──────
+REM /HIGH process priority requires SeIncreaseBasePriorityPrivilege,
+REM which standard users don't have. Without admin, /HIGH gets
+REM silently downgraded to NORMAL and we lose the perf bump. Check
+REM via "net session" -- returns success only when running as admin.
+net session >nul 2>&1
+if %errorlevel% neq 0 (
+    echo Requesting administrator privileges...
+    powershell -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
+    exit /b
+)
 
 setlocal enabledelayedexpansion
 title Journifi AI + NinjaTrader Launcher
