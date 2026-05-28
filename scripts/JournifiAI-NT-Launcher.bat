@@ -88,11 +88,20 @@ if exist "%NT_EXE%" (
 echo.
 
 REM -- Launch Journifi AI --
+REM
+REM Journifi is launched via PowerShell's Start-Process instead of cmd's
+REM "start" because Electron apps can stay attached to the launcher's
+REM console group when "start" is used. The symptom: X-ing out the
+REM launcher window also closes Journifi (Windows sends CTRL_CLOSE_EVENT
+REM to the whole console group, and Chromium obediently shuts down).
+REM PowerShell Start-Process detaches the child fully via CreateProcess
+REM with the right flags, so closing this window has no effect on
+REM Journifi -- as it should be.
 if exist "%JOURNIFI_EXE_MACHINE%" (
-    start "" "%JOURNIFI_EXE_MACHINE%"
+    powershell -WindowStyle Hidden -Command "Start-Process -FilePath '%JOURNIFI_EXE_MACHINE%'"
     echo [OK] Journifi AI launched ^(per-machine install^)
 ) else if exist "%JOURNIFI_EXE_USER%" (
-    start "" "%JOURNIFI_EXE_USER%"
+    powershell -WindowStyle Hidden -Command "Start-Process -FilePath '%JOURNIFI_EXE_USER%'"
     echo [OK] Journifi AI launched ^(per-user install^)
 ) else (
     echo [WARNING] Journifi AI not found at either expected location:
@@ -103,8 +112,12 @@ if exist "%JOURNIFI_EXE_MACHINE%" (
 echo.
 
 echo ================================================================
-echo Launcher complete. Both apps should be coming up now.
+echo Launcher complete. This window will close in a moment.
+echo Both apps run independently -- closing this window does not
+echo affect them.
 echo ================================================================
-echo.
-echo Press any key to close this window...
-pause >nul
+
+REM Brief delay so the user has a chance to glance at any warnings
+REM above, then exit cleanly. /nobreak prevents accidental Ctrl-C
+REM interruption from leaving the script in a weird state.
+timeout /t 3 /nobreak >nul
