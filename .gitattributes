@@ -1,0 +1,5 @@
+# Scripts are downloaded raw by testers: keep their bytes exactly as committed (CRLF for cmd.exe).
+scripts/*.bat -text
+scripts/*.ps1 -text
+scripts/*.txt -text
+*.zip binary
