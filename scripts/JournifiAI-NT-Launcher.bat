@@ -55,6 +55,41 @@ echo    Script: AlphaWolfTrader  ^|  Two-app idea: Xdzatx
 echo ================================================================
 echo.
 
+REM -- Keep NinjaTrader's data-folder link healthy (self-healing, optional) --
+REM When NinjaTrader8_EnsureLink.bat sits beside this launcher it checks that
+REM Documents\NinjaTrader 8 is the junction to the real data folder (the one
+REM outside OneDrive) and repairs it if a NinjaTrader update replaced it with a
+REM plain folder. It acts only when something is wrong, never deletes a file
+REM (anything moved aside is kept next to it), and does nothing while
+REM NinjaTrader is already open. Without the file, this step is skipped.
+if exist "%~dp0NinjaTrader8_EnsureLink.bat" (
+    call "%~dp0NinjaTrader8_EnsureLink.bat" /quiet
+    if !errorlevel! neq 0 (
+        echo [WARNING] Data-folder link check reported a problem - see the lines above.
+        echo           NinjaTrader will still launch. Afterwards, close it and run
+        echo           NinjaTrader8_EnsureLink.bat by hand.
+    )
+) else (
+    echo [INFO] NinjaTrader8_EnsureLink.bat not found beside the launcher - link check skipped.
+)
+echo.
+
+REM -- Keep the GC paragraph in NinjaTrader.exe.config (self-healing, optional) --
+REM Every NinjaTrader update ships a fresh config without the tuning paragraph.
+REM NinjaTrader8_EnsureGcConfig.ps1 MERGES the paragraph into whatever config is
+REM installed (never copies an old file over it: the new file carries binding
+REM redirects the new build needs). Nothing to do when it is already there.
+REM This launcher runs elevated, which the write under Program Files requires.
+if exist "%~dp0NinjaTrader8_EnsureGcConfig.ps1" (
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0NinjaTrader8_EnsureGcConfig.ps1" -ConfigPath "%NT_CONFIG%" -Quiet
+    if !errorlevel! neq 0 (
+        echo [WARNING] GC config merge reported a problem - see the lines above.
+    )
+) else (
+    echo [INFO] NinjaTrader8_EnsureGcConfig.ps1 not found beside the launcher - config merge skipped.
+)
+echo.
+
 REM -- Launch NinjaTrader --
 if exist "%NT_EXE%" (
     REM Server GC works on .NET Framework via environment variable
@@ -112,15 +147,12 @@ if exist "%JOURNIFI_EXE_MACHINE%" (
 echo.
 
 echo ================================================================
-echo Launcher complete. Closing in 5 seconds.
-echo Both apps run independently -- this window can be safely
-echo X'd out or left to close on its own; neither app cares.
+echo Launcher complete. This window will close in a moment.
+echo Both apps run independently -- closing this window does not
+echo affect them.
 echo ================================================================
 
-REM 5-second hold so the user has time to read any warnings above
-REM before the window auto-closes. /nobreak ignores keystrokes so
-REM the script doesn't exit early on an accidental keypress. The
-REM user can still X out the window if they want -- Journifi is
-REM properly detached now (PowerShell Start-Process above), so
-REM closing this window has no effect on either launched app.
-timeout /t 5 /nobreak >nul
+REM Brief delay so the user has a chance to glance at any warnings
+REM above, then exit cleanly. /nobreak prevents accidental Ctrl-C
+REM interruption from leaving the script in a weird state.
+timeout /t 3 /nobreak >nul
